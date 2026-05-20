@@ -100,20 +100,40 @@ def protocol_stats(df: pd.DataFrame) -> List[Dict]:
         return []
 
 
-def top_talkers(df: pd.DataFrame, top_n: int = 5) -> Dict:
-    if df is None or df.empty:
-        return {"src": [], "dst": []}
-    try:
-        df = df.copy()
-        df["bytes"] = pd.to_numeric(df["bytes"], errors="coerce").fillna(0)
-        src = df.groupby("src_ip")["bytes"].sum().sort_values(ascending=False).head(top_n)
-        dst = df.groupby("dst_ip")["bytes"].sum().sort_values(ascending=False).head(top_n)
-        return {"src": [{"ip": i, "bytes": int(b)} for i, b in src.items()],
-                "dst": [{"ip": i, "bytes": int(b)} for i, b in dst.items()]}
-    except Exception as e:
-        print("top_talkers error:", e)
+def top_talkers(df, top_n=5):
+
+    if df.empty:
         return {"src": [], "dst": []}
 
+    # ensure numeric
+    df["bytes"] = pd.to_numeric(df["bytes"], errors="coerce").fillna(0)
+
+    src = (
+        df.groupby("src_ip")["bytes"]
+        .sum()
+        .sort_values(ascending=False)
+        .head(top_n)
+        .reset_index()
+    )
+
+    dst = (
+        df.groupby("dst_ip")["bytes"]
+        .sum()
+        .sort_values(ascending=False)
+        .head(top_n)
+        .reset_index()
+    )
+
+    return {
+        "src": [
+            {"ip": row["src_ip"], "bytes": float(row["bytes"])}
+            for _, row in src.iterrows()
+        ],
+        "dst": [
+            {"ip": row["dst_ip"], "bytes": float(row["bytes"])}
+            for _, row in dst.iterrows()
+        ]
+    }
 
 def topology(df: pd.DataFrame) -> List[Dict]:
     if df is None or df.empty:
