@@ -12,3 +12,7 @@ uvicorn final_stream:app --reload
 cmd3:
 cd C:\VENOM\Coding\NOP\network-observability\frontend
 npm start
+
+
+(Render Deployment)
+Available at your primary URL https://network-observability-api.onrender.com
