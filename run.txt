@@ -1,0 +1,14 @@
+cmd1:
+cd C:\VENOM\Coding\NOP\network-observability\agent
+python packet_agent.py
+
+
+cmd2:
+cd C:\VENOM\Coding\NOP\network-observability\backend
+venv\Scripts\activate
+uvicorn final_stream:app --reload
+
+
+cmd3:
+cd C:\VENOM\Coding\NOP\network-observability\frontend
+npm start
