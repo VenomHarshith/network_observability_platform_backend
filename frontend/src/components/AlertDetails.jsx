@@ -3,7 +3,7 @@ import "../pages/Dashboard.css";
 import theme from "../theme";
 
 export default function AlertDetails({ details = {} }) {
-  const { metrics = {}, top_talkers = {}, protocols = [], explanations = [] } = details;
+  const { metrics = {}, top_talkers = {}, explanations = [] } = details;
 
   return (
     <div>
