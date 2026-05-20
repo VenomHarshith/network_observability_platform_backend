@@ -40,9 +40,10 @@ export function subscribe(cb) {
   window.addEventListener("metricsUpdated", handler);
   return () => window.removeEventListener("metricsUpdated", handler);
 }
-
-export default {
+const metricsStore = {
   getStoredMetrics,
   pushMetricsBatch,
   subscribe,
 };
+
+export default metricsStore;

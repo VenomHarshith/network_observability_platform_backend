@@ -1,5 +1,5 @@
 import React from "react";
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import theme from "../theme";
 
 const COLORS = [theme.primary, theme.success, theme.danger, "#f472b6", "#a78bfa", theme.warning];
@@ -8,12 +8,6 @@ export default function ProtocolChart({ data = [] }) {
   const pieData = (data || []).map((d) => ({ name: d.protocol, value: d.bytes }));
   const total = pieData.reduce((s, p) => s + (p.value || 0), 0);
 
-  const legendPayload = pieData.map((entry, idx) => ({
-    value: `${entry.name} ${total ? Math.round((entry.value / total) * 100) : 0}%`,
-    type: "circle",
-    color: COLORS[idx % COLORS.length],
-    id: entry.name,
-  }));
 
   const renderLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name }) => {
     const RADIAN = Math.PI / 180;
