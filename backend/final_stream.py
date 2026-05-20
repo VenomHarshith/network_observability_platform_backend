@@ -11,6 +11,16 @@ from typing import List, Dict
 
 detector = AnomalyDetector()
 training_buffer = []
+LIVE_FLOWS = []
+
+def get_live_dataframe():
+
+    global LIVE_FLOWS
+
+    if not LIVE_FLOWS:
+        return pd.DataFrame()
+
+    return pd.DataFrame(LIVE_FLOWS)
 
 app = FastAPI()
 
@@ -24,7 +34,7 @@ app.add_middleware(
 
 @app.get("/api/metrics/latest")
 def get_latest_metrics():
-    df = load_recent_flows(rows=200)
+    df = get_live_dataframe()
     metrics = compute_metrics(df)
 
     if not metrics:
@@ -63,7 +73,7 @@ def get_latest_metrics():
 
 @app.get("/api/alerts")
 def get_alerts():
-    df = load_recent_flows(rows=200)
+    df = get_live_dataframe()
     metrics = compute_metrics(df)
 
     if not metrics or not detector.trained:
@@ -210,56 +220,52 @@ def alert_details(df: pd.DataFrame) -> Dict:
 
 from fastapi import Request
 
-live_flows = []
-
 @app.post("/flows")
 async def receive_flows(request: Request):
+
+    global LIVE_FLOWS
 
     data = await request.json()
 
     if isinstance(data, list):
-        live_flows.extend(data)
+        LIVE_FLOWS.extend(data)
     else:
-        live_flows.append(data)
+        LIVE_FLOWS.append(data)
 
-    if len(live_flows) > 1000:
-        del live_flows[:-1000]
+    # keep latest 5000 flows only
+    LIVE_FLOWS = LIVE_FLOWS[-5000:]
 
     return {
-        "status": "success"
+        "status": "success",
+        "stored_flows": len(LIVE_FLOWS)
     }
 
-
 @app.get("/api/flows")
 def get_live_flows():
-    return live_flows[-100:]
+    return LIVE_FLOWS[-100:]
 
-
-@app.get("/api/flows")
-def get_live_flows():
-    return live_flows[-100:]
 
 @app.get("/api/protocols")
 def api_protocols():
-    df = load_recent_flows(rows=1000)
+    df = get_live_dataframe()
     return protocol_stats(df)
 
 
 @app.get("/api/top-talkers")
 def api_top_talkers():
-    df = load_recent_flows(rows=1000)
+    df = get_live_dataframe()
     return top_talkers(df, top_n=5)
 
 
 @app.get("/api/topology")
 def api_topology():
-    df = load_recent_flows(rows=2000)
+    df = get_live_dataframe()
     return topology(df)
 
 
 @app.get("/api/alerts/details")
 def api_alert_details():
-    df = load_recent_flows(rows=2000)
+    df = get_live_dataframe()
     return alert_details(df)
 
 
