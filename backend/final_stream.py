@@ -102,38 +102,64 @@ def protocol_stats(df: pd.DataFrame) -> List[Dict]:
 
 def top_talkers(df, top_n=5):
 
-    if df.empty:
-        return {"src": [], "dst": []}
+    try:
 
-    # ensure numeric
-    df["bytes"] = pd.to_numeric(df["bytes"], errors="coerce").fillna(0)
+        if df is None or df.empty:
+            return {"src": [], "dst": []}
 
-    src = (
-        df.groupby("src_ip")["bytes"]
-        .sum()
-        .sort_values(ascending=False)
-        .head(top_n)
-        .reset_index()
-    )
+        required_cols = ["src_ip", "dst_ip", "bytes"]
 
-    dst = (
-        df.groupby("dst_ip")["bytes"]
-        .sum()
-        .sort_values(ascending=False)
-        .head(top_n)
-        .reset_index()
-    )
+        for col in required_cols:
+            if col not in df.columns:
+                return {
+                    "error": f"Missing column: {col}",
+                    "available_columns": list(df.columns)
+                }
 
-    return {
-        "src": [
-            {"ip": row["src_ip"], "bytes": float(row["bytes"])}
-            for _, row in src.iterrows()
-        ],
-        "dst": [
-            {"ip": row["dst_ip"], "bytes": float(row["bytes"])}
-            for _, row in dst.iterrows()
-        ]
-    }
+        import pandas as pd
+
+        df["bytes"] = pd.to_numeric(
+            df["bytes"],
+            errors="coerce"
+        ).fillna(0)
+
+        src_stats = (
+            df.groupby("src_ip")["bytes"]
+            .sum()
+            .reset_index()
+            .sort_values(by="bytes", ascending=False)
+            .head(top_n)
+        )
+
+        dst_stats = (
+            df.groupby("dst_ip")["bytes"]
+            .sum()
+            .reset_index()
+            .sort_values(by="bytes", ascending=False)
+            .head(top_n)
+        )
+
+        return {
+            "src": [
+                {
+                    "ip": str(row["src_ip"]),
+                    "bytes": float(row["bytes"])
+                }
+                for _, row in src_stats.iterrows()
+            ],
+            "dst": [
+                {
+                    "ip": str(row["dst_ip"]),
+                    "bytes": float(row["bytes"])
+                }
+                for _, row in dst_stats.iterrows()
+            ]
+        }
+
+    except Exception as e:
+        return {
+            "error": str(e)
+        }
 
 def topology(df: pd.DataFrame) -> List[Dict]:
     if df is None or df.empty:
