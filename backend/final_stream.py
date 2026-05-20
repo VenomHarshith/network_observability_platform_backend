@@ -162,6 +162,37 @@ def alert_details(df: pd.DataFrame) -> Dict:
         return {}
 
 
+from fastapi import Request
+
+live_flows = []
+
+@app.post("/flows")
+async def receive_flows(request: Request):
+
+    data = await request.json()
+
+    if isinstance(data, list):
+        live_flows.extend(data)
+    else:
+        live_flows.append(data)
+
+    if len(live_flows) > 1000:
+        del live_flows[:-1000]
+
+    return {
+        "status": "success"
+    }
+
+
+@app.get("/api/flows")
+def get_live_flows():
+    return live_flows[-100:]
+
+
+@app.get("/api/flows")
+def get_live_flows():
+    return live_flows[-100:]
+
 @app.get("/api/protocols")
 def api_protocols():
     df = load_recent_flows(rows=1000)
