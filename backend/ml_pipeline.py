@@ -70,15 +70,34 @@ def run_pipeline(db, csv_path="flows.csv"):
         random_state=42
     )
 
-    model.fit(X)
-    features["anomaly_score"] = model.decision_function(X)
-
+    if len(X) < 20:
+        print("Not enough data for ML yet")
+        return
+    
+    train_X = X.iloc[:-5]
+    test_X = X.iloc[-5:]
+    
+    model.fit(train_X)
+    
+    scores = -model.decision_function(test_X)
+    
+    features.loc[test_X.index, "anomaly_score"] = scores
+    features["anomaly_score"] = features["anomaly_score"].fillna(0)
+    
     # -------------------------
     # Severity classification
     # -------------------------
     features["severity"] = "normal"
-    features.loc[features["anomaly_score"] < -0.3, "severity"] = "high"
-    features.loc[features["anomaly_score"] < -0.5, "severity"] = "critical"
+
+    features.loc[
+        features["anomaly_score"] > 0.12,
+        "severity"
+    ] = "high"
+    
+    features.loc[
+        features["anomaly_score"] > 0.2,
+        "severity"
+    ] = "critical"
 
     # -------------------------
     # Store results in DB

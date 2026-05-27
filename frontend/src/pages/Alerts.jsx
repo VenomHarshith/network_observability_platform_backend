@@ -42,8 +42,14 @@ export default function Alerts() {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 420px", gap: 20 }}>
         <div>
           {alerts.length === 0 ? (
-            <div style={{ padding: 12, background: "#082023", borderRadius: 8 }}>
-              No active alerts
+            <div
+              style={{
+                padding: 12,
+                background: "#082023",
+                borderRadius: 8,
+                color: "white"
+              }}
+            >No active alerts
             </div>
           ) : (
             alerts.map((a, i) => (

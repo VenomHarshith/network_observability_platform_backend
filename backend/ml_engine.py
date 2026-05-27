@@ -18,5 +18,7 @@ class AnomalyDetector:
         if not self.trained:
             return 0.0
 
-        score = -self.model.decision_function(X)[0]
+        raw_score = -self.model.decision_function(X)[0]
+        score = max(0.0, raw_score)
+
         return round(float(score), 3)

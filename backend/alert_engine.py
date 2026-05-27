@@ -11,7 +11,7 @@ def generate_alert(metrics, score):
     fanout = metrics.get("avg_fan_out", 0)
     ts = metrics.get("timestamp", None)
 
-    if score > 0.8:
+    if score > 0.12:
         alerts.append({
             "severity": "critical",
             "reason": "High ML anomaly score",

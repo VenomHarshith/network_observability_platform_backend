@@ -17,4 +17,11 @@ npm start
 (Render Deployment)
 Available at your primary URL https://network-observability-api.onrender.com
 (Vercel Deployment)
-network-observability-platform-backend-gdayztig2.vercel.app
+https://network-observability-platform-backend-6u37445bg.vercel.app/
+
+
+update the code:
+cd C:\VENOM\Coding\NOP\network-observability
+git add .
+git commit -m "your message here"
+git push
