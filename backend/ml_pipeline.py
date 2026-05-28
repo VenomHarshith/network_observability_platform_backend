@@ -70,7 +70,7 @@ def run_pipeline(db, csv_path="flows.csv"):
         random_state=42
     )
 
-    if len(X) < 20:
+    if len(X) < 10:
         print("Not enough data for ML yet")
         return
     
@@ -90,18 +90,28 @@ def run_pipeline(db, csv_path="flows.csv"):
     features["severity"] = "normal"
 
     features.loc[
-        features["anomaly_score"] > 0.12,
+        features["anomaly_score"] > 0.03,
         "severity"
     ] = "high"
     
     features.loc[
-        features["anomaly_score"] > 0.2,
+        features["anomaly_score"] > 0.06,
         "severity"
     ] = "critical"
 
     # -------------------------
     # Store results in DB
     # -------------------------
+    print("\n===== ML SCORES =====")
+    print(features[[
+        "total_bytes",
+        "conn_count",
+        "avg_fan_out",
+        "dst_ip_entropy",
+        "anomaly_score",
+        "severity"
+    ]].tail(10))
+    
     for ts, row in features.iterrows():
         db.merge(
             FlowWindow(
