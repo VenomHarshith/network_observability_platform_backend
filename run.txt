@@ -17,7 +17,7 @@ npm start
 (Render Deployment)
 Available at your primary URL https://network-observability-api.onrender.com
 (Vercel Deployment)
-https://network-observability-platform-backend-6u37445bg.vercel.app/
+network-observability-platform-backend-edxth6ark.vercel.app
 
 
 update the code:

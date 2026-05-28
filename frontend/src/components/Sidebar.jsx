@@ -14,7 +14,7 @@ export default function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <div className="brand">NOP — Observability</div>
+      <div className="brand">NetPulse</div>
       <nav className="sidebar-nav">
         {links.map((l) => (
           <NavLink key={l.to} to={l.to} className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`} end>
