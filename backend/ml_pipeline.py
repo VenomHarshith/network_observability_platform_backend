@@ -112,29 +112,3 @@ def run_pipeline(flows):
         "severity"
     ]].tail(10))
     
-    for ts, row in features.iterrows():
-        db.merge(
-            FlowWindow(
-                timestamp=ts,
-                total_bytes=row["total_bytes"],
-                conn_count=row["conn_count"],
-                avg_fan_out=row["avg_fan_out"],
-                dst_ip_entropy=row["dst_ip_entropy"],
-                anomaly_score=row["anomaly_score"],
-                severity=row["severity"],
-            )
-        )
-
-        if row["severity"] in ["high", "critical"]:
-            db.add(
-                Alert(
-                    timestamp=ts,
-                    severity=row["severity"],
-                    reason=(
-                        f"entropy={row['dst_ip_entropy']:.2f}, "
-                        f"fanout={row['avg_fan_out']:.1f}"
-                    )
-                )
-            )
-
-    db.commit()
