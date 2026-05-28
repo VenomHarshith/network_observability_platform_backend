@@ -114,14 +114,14 @@ export default function Alerts() {
                   background:
                     alert.severity === "critical"
                       ? "#ff000033"
-                      : a.severity === "high"
+                      : alert.severity === "high"
                       ? "#ffaa0033"
                       : "#00ff9c22",
-
+                                  
                   border:
                     alert.severity === "critical"
                       ? "1px solid #ff4d4f"
-                      : a.severity === "high"
+                      : alert.severity === "high"
                       ? "1px solid #ffb020"
                       : "1px solid #00ff9c44"
                 }}
@@ -135,14 +135,14 @@ export default function Alerts() {
                     textTransform: "uppercase"
                   }}
                 >
-                  {a.severity}
+                  {alert.severity}
                 </div>
 
                 {/* score */}
                 <div style={{ marginTop: 10 }}>
                   ML anomaly score:
                   <b style={{ marginLeft: 6 }}>
-                    {a.score?.toFixed(3)}
+                    {alert.score?.toFixed(3)}
                   </b>
                 </div>
 
@@ -151,7 +151,7 @@ export default function Alerts() {
                   Traffic:
                   <b style={{ marginLeft: 6 }}>
                     {(
-                      (a.total_bytes || 0) /
+                      (alert.total_bytes || 0) /
                       (1024 * 1024)
                     ).toFixed(2)} MB
                   </b>
@@ -161,7 +161,7 @@ export default function Alerts() {
                 <div style={{ marginTop: 8 }}>
                   Entropy:
                   <b style={{ marginLeft: 6 }}>
-                    {a.entropy?.toFixed(2)}
+                    {alert.entropy?.toFixed(2)}
                   </b>
                 </div>
 
@@ -169,12 +169,12 @@ export default function Alerts() {
                 <div style={{ marginTop: 8 }}>
                   Fan-Out:
                   <b style={{ marginLeft: 6 }}>
-                    {a.fan_out?.toFixed(2)}
+                    {alert.fan_out?.toFixed(2)}
                   </b>
                 </div>
 
                 {/* timestamp */}
-                {a.timestamp && (
+                {alert.timestamp && (
 
                   <div
                     style={{
@@ -185,7 +185,7 @@ export default function Alerts() {
                   >
                     Time:
                     {" "}
-                    {new Date(a.timestamp).toLocaleString()}
+                    {new Date(alert.timestamp).toLocaleString()}
                   </div>
 
                 )}
