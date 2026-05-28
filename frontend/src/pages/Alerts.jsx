@@ -223,7 +223,18 @@ export default function Alerts() {
                       opacity: 0.65
                     }}
                   >
-                    {new Date(alert.timestamp).toLocaleString("en-IN", {
+                    {new Date(
+                      alert.timestamp.endsWith("Z")
+                        ? alert.timestamp
+                        : alert.timestamp + "Z"
+                    ).toLocaleString("en-IN", {
+                      timeZone: "Asia/Kolkata",
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
                       hour12: true
                     })}
                   </div>

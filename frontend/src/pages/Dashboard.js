@@ -1,171 +1,451 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, {
+  useEffect,
+  useState
+} from "react";
+
 import Card from "../components/Card";
-import LineChartCard from "../components/LineChartCard";
-import ProtocolChart from "../components/ProtocolChart";
-import TopologyGraph from "../components/TopologyGraph";
-import TopTalkers from "../components/TopTalkers";
-import AlertDetails from "../components/AlertDetails";
+
+import LineChartCard
+from "../components/LineChartCard";
+
+import ProtocolChart
+from "../components/ProtocolChart";
+
+import TopologyGraph
+from "../components/TopologyGraph";
+
 import "./Dashboard.css";
 
-/* ---------- Helpers ---------- */
-function formatBytes(bytes) {
-  if (bytes == null || Number.isNaN(bytes)) return { value: 0, unit: "B" };
-  if (bytes < 1024) return { value: bytes, unit: "B" };
-  if (bytes < 1024 * 1024) return { value: +(bytes / 1024).toFixed(2), unit: "KB" };
-  return { value: +(bytes / (1024 * 1024)).toFixed(2), unit: "MB" };
-}
+import {
+  getMetrics,
+  getAlerts,
+  getProtocols,
+  getTopology
+} from "../api";
 
-/* ---------- Dashboard ---------- */
-export default function Dashboard() {
-  const [metrics, setMetrics] = useState([]);
-  const [alerts, setAlerts] = useState([]);
-  const [autoMode, setAutoMode] = useState(true);
-  const mounted = useRef(true);
+function formatMB(bytes) {
 
-  const fetchAll = useCallback(async () => {
-    try {
-      const metricsRes = await fetch("http://127.0.0.1:8000/api/metrics/latest");
-      const alertsRes = await fetch("http://127.0.0.1:8000/api/alerts");
-      const protoRes = await fetch("http://127.0.0.1:8000/api/protocols");
-      const topRes = await fetch("http://127.0.0.1:8000/api/top-talkers");
-      const topoRes = await fetch("http://127.0.0.1:8000/api/topology");
-      const detailsRes = await fetch("http://127.0.0.1:8000/api/alerts/details");
-
-      const mData = metricsRes.ok ? await metricsRes.json() : [];
-      const aData = alertsRes.ok ? await alertsRes.json() : [];
-      const protoData = protoRes.ok ? await protoRes.json() : [];
-      const topData = topRes.ok ? await topRes.json() : { src: [], dst: [] };
-      const topoData = topoRes.ok ? await topoRes.json() : [];
-      const detailsData = detailsRes.ok ? await detailsRes.json() : {};
-
-      if (Array.isArray(mData) && mData.length > 0) {
-        setMetrics((prev) => {
-          const appended = [...prev, ...mData.map((x) => ({ ...x }))];
-          return appended.slice(-120); // keep last 120 points
-        });
-      }
-      setAlerts(Array.isArray(aData) ? aData : []);
-      setProtocols(Array.isArray(protoData) ? protoData : []);
-      setTopTalkers(topData);
-      setTopology(topoData);
-      setAlertDetails(detailsData);
-    } catch (e) {
-      // keep console error for debugging; production could surface a toast instead
-      // eslint-disable-next-line no-console
-      console.error("Fetch error:", e);
-    }
-  }, []);
-
-  useEffect(() => {
-    mounted.current = true;
-    fetchAll();
-    let id = null;
-    if (autoMode) id = setInterval(fetchAll, 5000);
-    return () => {
-      mounted.current = false;
-      if (id) clearInterval(id);
-    };
-  }, [autoMode, fetchAll]);
-
-  // Prepare chart-friendly dataset; attach unit fields used by tooltip
-  const chartData = metrics.map((m) => {
-    const bytes = formatBytes(m.total_bytes);
-    return {
-      time: new Date(m.timestamp).toLocaleTimeString(),
-      bytes: bytes.value,
-      unit: bytes.unit,
-      bytes_unit: bytes.unit,
-      entropy: typeof m.dst_ip_entropy === "number" ? +m.dst_ip_entropy.toFixed(3) : 0,
-      fanout: typeof m.avg_fan_out === "number" ? +m.avg_fan_out.toFixed(3) : 0,
-      throughput: typeof m.throughput_mbps === "number" ? +m.throughput_mbps : 0,
-    };
-  });
-
-  const latestTrafficUnit = chartData.length ? chartData[chartData.length - 1].bytes_unit : "B";
-
-  const speedData = metrics.map((m) => ({ time: new Date(m.timestamp).toLocaleTimeString(), speed: m.throughput_mbps || 0 }));
-
-  const [protocols, setProtocols] = React.useState([]);
-  const [topTalkers, setTopTalkers] = React.useState({ src: [], dst: [] });
-  const [topology, setTopology] = React.useState([]);
-  const [alertDetailsState, setAlertDetails] = React.useState({});
+  if (!bytes) return "0.00";
 
   return (
-    <div className="dashboard-container">
+    bytes /
+    (1024 * 1024)
+  ).toFixed(2);
+
+}
+
+export default function Dashboard() {
+
+  const [metrics, setMetrics] =
+    useState([]);
+
+  const [alerts, setAlerts] =
+    useState([]);
+
+  const [protocols, setProtocols] =
+    useState([]);
+
+  const [topology, setTopology] =
+    useState([]);
+
+  const [autoMode, setAutoMode] =
+    useState(true);
+
+  /* ---------------- FETCH LOOP ---------------- */
+
+  useEffect(() => {
+
+    fetchAll();
+
+    let id = null;
+
+    if (autoMode) {
+
+      id =
+        setInterval(fetchAll, 5000);
+
+    }
+
+    return () => {
+
+      if (id) clearInterval(id);
+
+    };
+
+  }, [autoMode]);
+
+  async function fetchAll() {
+
+    try {
+
+      const m =
+        await getMetrics();
+
+      const a =
+        await getAlerts();
+
+      const p =
+        await getProtocols();
+
+      const topo =
+        await getTopology();
+
+      setMetrics(m.data || []);
+
+      setAlerts(
+        a.data?.alerts || []
+      );
+
+      setProtocols(p || []);
+
+      setTopology(topo || []);
+
+    } catch (e) {
+
+      console.error(e);
+
+    }
+
+  }
+
+  /* ---------------- HELPERS ---------------- */
+
+  const latest =
+    metrics[metrics.length - 1] || {};
+
+  const trafficData =
+    metrics.map((m) => ({
+
+      time:
+        new Date(m.timestamp)
+          .toLocaleTimeString(
+            "en-IN",
+            {
+              timeZone:
+                "Asia/Kolkata"
+            }
+          ),
+
+      mb:
+        Number(
+          formatMB(
+            m.total_bytes
+          )
+        )
+
+    }));
+
+  /* ---------------- UI ---------------- */
+
+  return (
+
+    <div
+      className="dashboard-container"
+    >
+
+      {/* HEADER */}
       <div className="header-row">
+
         <div>
-          <div className="title">Network Observability Platform</div>
-          <div className="meta">Operations Center — Live network telemetry</div>
+
+          <div className="title">
+            Network Observability Platform
+          </div>
+
+          <div className="meta">
+
+            <span
+              style={{
+                width: 10,
+                height: 10,
+
+                borderRadius: "50%",
+
+                background: "#10b981",
+
+                display: "inline-block",
+
+                marginRight: 10,
+
+                boxShadow:
+                  "0 0 12px rgba(16,185,129,0.6)"
+              }}
+            />
+
+            Operations Center — Live telemetry
+
+          </div>
+
         </div>
 
+        {/* CONTROLS */}
         <div className="controls">
-          <div className="meta" style={{ marginRight: 8 }}>{`📊 Data points loaded: ${metrics.length}`}</div>
-          <button className="btn btn-primary" onClick={fetchAll}>Run ML ▶</button>
+
           <button
-            className={`btn ${autoMode ? "toggle-on" : "toggle-off"}`}
-            onClick={() => setAutoMode((v) => !v)}
+            className="btn btn-primary"
+            onClick={fetchAll}
           >
-            {autoMode ? "Auto ON" : "Auto OFF"}
+            Refresh
           </button>
+
+          <button
+            className="btn btn-ghost"
+            onClick={() =>
+              setAutoMode((v) => !v)
+            }
+          >
+            {autoMode
+              ? "Auto ON"
+              : "Auto OFF"}
+          </button>
+
         </div>
+
       </div>
 
-      <Card title={`📈 Network Traffic (${latestTrafficUnit})`}>
-        <LineChartCard data={chartData} dataKey="bytes" unitKey="bytes_unit" yLabel={latestTrafficUnit} />
-      </Card>
+      {/* KPI ROW */}
+      <div className="grid-3">
 
-      <Card title={"🚀 Network Speed (MB/s)"}>
-        <LineChartCard data={speedData} dataKey="speed" unitKey={null} yLabel="MB/s" stroke={require("../theme").default.primary} />
-      </Card>
+        <KPI
+          title="Traffic Volume"
+          value={`${formatMB(latest.total_bytes)} MB`}
+          color="#3b82f6"
+        />
 
-      <div className="grid-2">
-        <Card title="📊 Destination IP Entropy">
-          <LineChartCard data={chartData} dataKey="entropy" yLabel="Entropy" stroke={require("../theme").default.success} />
-        </Card>
+        <KPI
+          title="Entropy"
+          value={
+            latest.dst_ip_entropy
+              ?.toFixed(2)
+              || "0.00"
+          }
+          color="#10b981"
+        />
 
-        <Card title="🔀 Average Fan-Out">
-          <LineChartCard data={chartData} dataKey="fanout" yLabel="Fan-Out" stroke={require("../theme").default.warning} />
-        </Card>
+        <KPI
+          title="Fan-Out"
+          value={
+            latest.avg_fan_out
+              ?.toFixed(2)
+              || "0.00"
+          }
+          color="#f59e0b"
+        />
+
       </div>
 
-      <div className="grid-2">
+      {/* TRAFFIC + PROTOCOL */}
+      <div
+        className="grid-2"
+        style={{
+          marginTop: 24
+        }}
+      >
+
+        <Card title="📈 Traffic Overview">
+
+          <LineChartCard
+            data={trafficData}
+            dataKey="mb"
+            yLabel="MB"
+          />
+
+        </Card>
+
         <Card title="🥧 Protocol Distribution">
-          <ProtocolChart data={protocols} />
+
+          <div
+            style={{
+              height: 320,
+
+              display: "flex",
+
+              alignItems: "center",
+
+              justifyContent: "center"
+            }}
+          >
+
+            <ProtocolChart
+              data={protocols}
+            />
+
+          </div>
+
         </Card>
 
-        <Card title="🧾 Top Talkers">
-          <TopTalkers data={topTalkers} />
-        </Card>
       </div>
 
-      <Card title="🌐 Network Topology">
-        <TopologyGraph edges={topology} />
-      </Card>
+      {/* TOPOLOGY */}
+      <div
+        style={{
+          marginTop: 24
+        }}
+      >
 
-      <Card title="🚨 ML Alert Details">
-        <AlertDetails details={alertDetailsState} />
-      </Card>
+        <Card title="🌐 Live Network Topology">
 
-      <div className="alerts-panel">
-        <Card title="🚨 Live ML Alerts">
+          <div
+            style={{
+              height: 500
+            }}
+          >
+
+            <TopologyGraph
+              edges={topology}
+            />
+
+          </div>
+
+        </Card>
+
+      </div>
+
+      {/* ALERTS */}
+      <div
+        style={{
+          marginTop: 24
+        }}
+      >
+
+        <Card title="🚨 Recent ML Alerts">
+
           {alerts.length === 0 ? (
-            <div className="alert-empty">✔ No abnormal behavior detected</div>
+
+            <div className="alert-empty">
+
+              ✔ No abnormal behavior detected
+
+            </div>
+
           ) : (
-            alerts.map((a, i) => (
-              <div
-                key={i}
-                className={`alert ${
-                  a.severity === "critical" ? "alert-critical" : a.severity === "high" ? "alert-high" : "alert-medium"
-                }`}
-              >
-                <div style={{ fontWeight: 800, textTransform: "uppercase" }}>{a.severity}</div>
-                <div style={{ marginTop: 6, fontWeight: 700 }}>{a.reason}</div>
-                <div style={{ marginTop: 6, opacity: 0.95 }}>{a.explanation}</div>
-              </div>
-            ))
+
+            <div
+              style={{
+                display: "flex",
+
+                flexDirection: "column",
+
+                gap: 14
+              }}
+            >
+
+              {alerts
+                .slice(0, 4)
+                .map((a, i) => (
+
+                  <div
+                    key={i}
+                    style={{
+
+                      padding:
+                        "16px",
+
+                      borderRadius: 18,
+
+                      background:
+                        a.severity === "critical"
+                          ? "rgba(239,68,68,0.10)"
+                          : "rgba(245,158,11,0.10)",
+
+                      border:
+                        a.severity === "critical"
+                          ? "1px solid rgba(239,68,68,0.18)"
+                          : "1px solid rgba(245,158,11,0.18)"
+
+                    }}
+                  >
+
+                    <div
+                      style={{
+                        fontWeight: 800,
+
+                        textTransform:
+                          "uppercase",
+
+                        fontSize: 12,
+
+                        letterSpacing: 1,
+
+                        marginBottom: 8,
+
+                        color:
+                          a.severity === "critical"
+                            ? "#dc2626"
+                            : "#d97706"
+                      }}
+                    >
+                      {a.severity}
+                    </div>
+
+                    <div
+                      style={{
+                        fontWeight: 700,
+
+                        marginBottom: 6
+                      }}
+                    >
+                      {a.reason}
+                    </div>
+
+                    <div
+                      style={{
+                        color: "#64748b",
+
+                        lineHeight: 1.6,
+
+                        fontSize: 14
+                      }}
+                    >
+                      {a.explanation}
+                    </div>
+
+                  </div>
+
+                ))}
+
+            </div>
+
           )}
+
         </Card>
+
       </div>
+
     </div>
+
   );
+
+}
+
+/* ---------------- KPI ---------------- */
+
+function KPI({
+  title,
+  value,
+  color
+}) {
+
+  return (
+
+    <div
+      className="kpi"
+      style={{
+        borderTop:
+          `4px solid ${color}`
+      }}
+    >
+
+      <div className="kpi-title">
+        {title}
+      </div>
+
+      <div className="kpi-value">
+        {value}
+      </div>
+
+    </div>
+
+  );
+
 }

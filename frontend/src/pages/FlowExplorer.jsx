@@ -1,22 +1,42 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
+
 import Layout from "../layout/Layout";
+
 import TopologyGraph from "../components/TopologyGraph";
-import { formatBytes } from "../components/TopTalkers";
-import { getTopology } from "../api";
+
+import { formatBytes }
+from "../components/TopTalkers";
+
+import { getTopology }
+from "../api";
 
 export default function FlowExplorer() {
 
   const [edges, setEdges] = useState([]);
+
   const [isFrozen, setIsFrozen] = useState(false);
+
   const [selected, setSelected] = useState(null);
-  const [showAllConnections, setShowAllConnections] = useState(false);
+
+  const [showAllConnections, setShowAllConnections] =
+    useState(false);
+
   const [query, setQuery] = useState("");
-  const [talkerTab, setTalkerTab] = useState("src");
+
+  const [talkerTab, setTalkerTab] =
+    useState("src");
 
   const fgApi = useRef(null);
 
   useEffect(() => {
+
     setShowAllConnections(false);
+
   }, [selected]);
 
   useEffect(() => {
@@ -25,7 +45,8 @@ export default function FlowExplorer() {
 
     fetchTopo();
 
-    const id = setInterval(fetchTopo, 5000);
+    const id =
+      setInterval(fetchTopo, 5000);
 
     return () => clearInterval(id);
 
@@ -39,31 +60,48 @@ export default function FlowExplorer() {
 
   }
 
-  // TOP TALKERS
-  const { aggregatedSrc, aggregatedDst } = useMemo(() => {
+  /* ---------------- TOP TALKERS ---------------- */
+
+  const {
+    aggregatedSrc,
+    aggregatedDst
+  } = useMemo(() => {
 
     const srcMap = {};
+
     const dstMap = {};
 
     (edges || []).forEach((e) => {
 
       srcMap[e.src_ip] =
-        (srcMap[e.src_ip] || 0) + (e.bytes || 0);
+        (srcMap[e.src_ip] || 0)
+        + (e.bytes || 0);
 
       dstMap[e.dst_ip] =
-        (dstMap[e.dst_ip] || 0) + (e.bytes || 0);
+        (dstMap[e.dst_ip] || 0)
+        + (e.bytes || 0);
 
     });
 
     const src =
       Object.entries(srcMap)
-        .map(([id, bytes]) => ({ id, bytes }))
-        .sort((a, b) => b.bytes - a.bytes);
+        .map(([id, bytes]) => ({
+          id,
+          bytes
+        }))
+        .sort((a, b) =>
+          b.bytes - a.bytes
+        );
 
     const dst =
       Object.entries(dstMap)
-        .map(([id, bytes]) => ({ id, bytes }))
-        .sort((a, b) => b.bytes - a.bytes);
+        .map(([id, bytes]) => ({
+          id,
+          bytes
+        }))
+        .sort((a, b) =>
+          b.bytes - a.bytes
+        );
 
     return {
       aggregatedSrc: src,
@@ -72,7 +110,8 @@ export default function FlowExplorer() {
 
   }, [edges]);
 
-  // FILTERS
+  /* ---------------- FILTERS ---------------- */
+
   const filteredSrc = useMemo(() => {
 
     if (!query) return aggregatedSrc;
@@ -103,9 +142,9 @@ export default function FlowExplorer() {
 
       <div
         style={{
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%'
+          display: "flex",
+          flexDirection: "column",
+          height: "100%"
         }}
       >
 
@@ -115,45 +154,79 @@ export default function FlowExplorer() {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            padding: 24,
-            boxSizing: 'border-box',
-            height: 64
+
+            marginBottom: 24,
+
+            gap: 16,
+
+            flexWrap: "wrap"
           }}
         >
 
-          <h2 style={{ margin: 0 }}>
-            Flow Explorer
-          </h2>
+          <div>
 
+            <h2
+              style={{
+                marginBottom: 8
+              }}
+            >
+              Flow Explorer
+            </h2>
+
+            <div
+              style={{
+                color: "#64748b",
+                fontSize: 14
+              }}
+            >
+              Live topology and traffic relationships
+            </div>
+
+          </div>
+
+          {/* CONTROLS */}
           <div
             style={{
               display: "flex",
-              gap: 8,
+              gap: 12,
               alignItems: "center"
             }}
           >
 
             <input
-              placeholder="Search IP..."
+              placeholder="Search IP address..."
               value={query}
               onChange={(e) =>
                 setQuery(e.target.value)
               }
               style={{
-                padding: "8px 10px",
-                borderRadius: 10,
-                border: "1px solid rgba(15,23,42,0.08)"
+                padding: "12px 14px",
+
+                borderRadius: 14,
+
+                border:
+                  "1px solid rgba(15,23,42,0.08)",
+
+                background:
+                  "rgba(255,255,255,0.8)",
+
+                minWidth: 220,
+
+                outline: "none",
+
+                fontSize: 14
               }}
             />
 
             <button
-              onClick={() => setIsFrozen((f) => !f)}
-              style={{
-                padding: "8px 12px",
-                cursor: "pointer"
-              }}
+              className="btn btn-primary"
+              onClick={() =>
+                setIsFrozen((f) => !f)
+              }
             >
-              {isFrozen ? "Unfreeze" : "Freeze"}
+              {isFrozen
+                ? "Unfreeze"
+                : "Freeze"}
             </button>
 
           </div>
@@ -163,180 +236,253 @@ export default function FlowExplorer() {
         {/* MAIN */}
         <div
           style={{
-            display: 'flex',
-            gap: 18,
-            alignItems: 'stretch',
+            display: "grid",
+
+            gridTemplateColumns:
+              "1fr 360px",
+
+            gap: 22,
+
             flex: 1,
-            overflow: 'hidden',
-            padding: 24,
-            boxSizing: 'border-box'
+
+            minHeight: 0
           }}
         >
 
           {/* GRAPH */}
           <div
+            className="card"
             style={{
-              flex: 1,
-              minWidth: 0,
-              display: 'flex',
-              flexDirection: 'column'
+              padding: 0,
+
+              overflow: "hidden",
+
+              display: "flex",
+
+              flexDirection: "column"
             }}
           >
 
+            {/* GRAPH HEADER */}
             <div
-              className="card"
               style={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                overflow: 'hidden'
+                padding:
+                  "18px 22px",
+
+                borderBottom:
+                  "1px solid rgba(15,23,42,0.05)",
+
+                display: "flex",
+
+                justifyContent:
+                  "space-between",
+
+                alignItems: "center"
               }}
             >
 
+              <div>
+
+                <div
+                  style={{
+                    fontWeight: 800,
+                    fontSize: 18
+                  }}
+                >
+                  Network Graph
+                </div>
+
+                <div
+                  style={{
+                    color: "#64748b",
+                    fontSize: 13,
+                    marginTop: 4
+                  }}
+                >
+                  Interactive realtime topology
+                </div>
+
+              </div>
+
               <div
                 style={{
-                  padding: 12,
-                  borderBottom:
-                    '1px solid rgba(15,23,42,0.04)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+
+                  fontSize: 13,
+                  color: "#64748b"
                 }}
               >
 
-                <div style={{ fontWeight: 700 }}>
-                  Flow Graph
-                </div>
-
-                <button
-                  onClick={() =>
-                    setIsFrozen((f) => !f)
-                  }
+                <span
                   style={{
-                    padding: "6px 10px",
-                    cursor: "pointer"
+                    width: 10,
+                    height: 10,
+
+                    borderRadius: "50%",
+
+                    background:
+                      isFrozen
+                        ? "#f59e0b"
+                        : "#10b981",
+
+                    boxShadow:
+                      isFrozen
+                        ? "0 0 12px rgba(245,158,11,0.5)"
+                        : "0 0 12px rgba(16,185,129,0.5)"
                   }}
-                >
-                  {isFrozen ? "Unfreeze" : "Freeze"}
-                </button>
-
-              </div>
-
-              <div style={{ flex: 1, minHeight: 0 }}>
-
-                <TopologyGraph
-                  edges={edges}
-                  selectedNodeId={selected?.id}
-                  onNodeClick={(n) => setSelected(n)}
-                  isFrozen={isFrozen}
-                  exposeRef={fgApi}
-                  height={`100%`}
                 />
 
+                {isFrozen
+                  ? "Paused"
+                  : "Live"}
+
               </div>
+
+            </div>
+
+            {/* GRAPH */}
+            <div
+              style={{
+                flex: 1,
+                minHeight: 700
+              }}
+            >
+
+              <TopologyGraph
+                edges={edges}
+                selectedNodeId={selected?.id}
+                onNodeClick={(n) =>
+                  setSelected(n)
+                }
+                isFrozen={isFrozen}
+                exposeRef={fgApi}
+                height={`100%`}
+              />
 
             </div>
 
           </div>
 
           {/* RIGHT PANEL */}
-          <aside
+          <div
             style={{
-              width: 360,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 12,
-              minWidth: 0,
-              height: '100%'
+              display: "flex",
+
+              flexDirection: "column",
+
+              gap: 18
             }}
           >
 
-            {/* TOP TALKERS */}
+            {/* TALKERS */}
             <div
               className="card"
               style={{
-                padding: 14,
-                display: 'flex',
-                flexDirection: 'column',
-                height: '60%',
-                overflow: 'hidden'
+                flex: 1,
+
+                overflow: "hidden",
+
+                display: "flex",
+
+                flexDirection: "column"
               }}
             >
 
-              {/* HEADER */}
               <div
                 style={{
                   display: "flex",
-                  justifyContent: "space-between",
+
+                  justifyContent:
+                    "space-between",
+
                   alignItems: "center",
-                  marginBottom: 12
+
+                  marginBottom: 18
                 }}
               >
 
-                <div style={{ fontWeight: 700 }}>
-                  Top Talkers
+                <div>
+
+                  <div
+                    style={{
+                      fontWeight: 800,
+                      fontSize: 17
+                    }}
+                  >
+                    Top Talkers
+                  </div>
+
+                  <div
+                    style={{
+                      color: "#64748b",
+                      fontSize: 13,
+                      marginTop: 4
+                    }}
+                  >
+                    Highest traffic contributors
+                  </div>
+
                 </div>
 
                 {/* TABS */}
                 <div
                   style={{
                     display: "flex",
-                    background: "#f1f5f9",
-                    borderRadius: 10,
+
+                    background:
+                      "#f1f5f9",
+
+                    borderRadius: 12,
+
                     padding: 4,
+
                     gap: 4
                   }}
                 >
 
-                  <button
-                    onClick={() => setTalkerTab("src")}
-                    style={{
-                      border: "none",
-                      padding: "6px 12px",
-                      borderRadius: 8,
-                      cursor: "pointer",
+                  {["src", "dst"].map((tab) => (
 
-                      background:
-                        talkerTab === "src"
-                          ? "#0f172a"
-                          : "transparent",
+                    <button
+                      key={tab}
+                      onClick={() =>
+                        setTalkerTab(tab)
+                      }
+                      style={{
+                        border: "none",
 
-                      color:
-                        talkerTab === "src"
-                          ? "white"
-                          : "#0f172a",
+                        padding:
+                          "7px 14px",
 
-                      fontWeight: 600,
-                      fontSize: 13
-                    }}
-                  >
-                    Sources
-                  </button>
+                        borderRadius: 10,
 
-                  <button
-                    onClick={() => setTalkerTab("dst")}
-                    style={{
-                      border: "none",
-                      padding: "6px 12px",
-                      borderRadius: 8,
-                      cursor: "pointer",
+                        cursor: "pointer",
 
-                      background:
-                        talkerTab === "dst"
-                          ? "#0f172a"
-                          : "transparent",
+                        fontWeight: 700,
 
-                      color:
-                        talkerTab === "dst"
-                          ? "white"
-                          : "#0f172a",
+                        fontSize: 13,
 
-                      fontWeight: 600,
-                      fontSize: 13
-                    }}
-                  >
-                    Destinations
-                  </button>
+                        transition:
+                          "0.2s ease",
+
+                        background:
+                          talkerTab === tab
+                            ? "#0f172a"
+                            : "transparent",
+
+                        color:
+                          talkerTab === tab
+                            ? "white"
+                            : "#0f172a"
+                      }}
+                    >
+                      {tab === "src"
+                        ? "Sources"
+                        : "Destinations"}
+                    </button>
+
+                  ))}
 
                 </div>
 
@@ -346,7 +492,13 @@ export default function FlowExplorer() {
               <div
                 style={{
                   overflowY: "auto",
-                  flex: 1,
+
+                  display: "flex",
+
+                  flexDirection: "column",
+
+                  gap: 10,
+
                   paddingRight: 4
                 }}
               >
@@ -361,22 +513,37 @@ export default function FlowExplorer() {
                     <div
                       key={i}
                       style={{
+
                         display: "flex",
-                        justifyContent: "space-between",
+
+                        justifyContent:
+                          "space-between",
+
                         alignItems: "center",
 
-                        padding: "10px 12px",
+                        padding:
+                          "12px 14px",
 
-                        borderBottom:
-                          "1px solid rgba(15,23,42,0.05)"
+                        borderRadius: 14,
+
+                        background:
+                          "rgba(248,250,252,0.8)",
+
+                        border:
+                          "1px solid rgba(15,23,42,0.04)"
                       }}
                     >
 
                       <div
                         style={{
-                          fontWeight: 600,
-                          fontSize: 14,
-                          wordBreak: "break-all"
+                          fontWeight: 700,
+
+                          fontSize: 13,
+
+                          maxWidth: 190,
+
+                          wordBreak:
+                            "break-word"
                         }}
                       >
                         {t.id}
@@ -384,10 +551,11 @@ export default function FlowExplorer() {
 
                       <div
                         style={{
-                          fontWeight: 700,
-                          color: "#334155",
-                          marginLeft: 10,
-                          whiteSpace: "nowrap"
+                          fontWeight: 800,
+
+                          color: "#0f172a",
+
+                          fontSize: 13
                         }}
                       >
                         {formatBytes(t.bytes)}
@@ -405,149 +573,174 @@ export default function FlowExplorer() {
             <div
               className="card"
               style={{
-                padding: 12,
-                display: 'flex',
-                flexDirection: 'column',
-                height: '40%'
+                flex: 1
               }}
             >
 
               <div
                 style={{
-                  fontWeight: 700,
-                  marginBottom: 8
+                  marginBottom: 18
                 }}
               >
-                Details
+
+                <div
+                  style={{
+                    fontWeight: 800,
+                    fontSize: 17
+                  }}
+                >
+                  Node Details
+                </div>
+
+                <div
+                  style={{
+                    color: "#64748b",
+                    fontSize: 13,
+                    marginTop: 4
+                  }}
+                >
+                  Selected node insights
+                </div>
+
               </div>
 
-              <div
-                style={{
-                  minHeight: 80,
-                  overflow: 'hidden',
-                  flex: 1
-                }}
-              >
+              {selected ? (
 
-                {selected ? (
+                <div>
 
-                  <div>
+                  <div
+                    style={{
+                      color: "#64748b",
 
-                    <div
-                      style={{
-                        color: "var(--label)",
-                        marginBottom: 6
-                      }}
-                    >
-                      IP
-                    </div>
+                      fontSize: 12,
 
-                    <div
-                      style={{
-                        fontWeight: 800,
-                        marginBottom: 10
-                      }}
-                    >
-                      {selected.id}
-                    </div>
+                      marginBottom: 8
+                    }}
+                  >
+                    SELECTED IP
+                  </div>
 
-                    <div
-                      style={{
-                        color: "var(--label)",
-                        marginBottom: 6
-                      }}
-                    >
-                      Connections
-                    </div>
+                  <div
+                    style={{
+                      fontWeight: 800,
 
-                    <div
-                      style={{
-                        marginBottom: 8,
-                        overflow: 'auto'
-                      }}
-                    >
+                      fontSize: 18,
 
-                      {(edges || [])
-                        .filter((e) =>
-                          e.src_ip === selected.id ||
-                          e.dst_ip === selected.id
-                        )
-                        .slice(
-                          0,
-                          showAllConnections ? 1000 : 8
-                        )
-                        .map((e, i) => (
+                      marginBottom: 20,
+
+                      wordBreak:
+                        "break-word"
+                    }}
+                  >
+                    {selected.id}
+                  </div>
+
+                  <div
+                    style={{
+                      color: "#64748b",
+
+                      fontSize: 12,
+
+                      marginBottom: 10
+                    }}
+                  >
+                    CONNECTIONS
+                  </div>
+
+                  <div
+                    style={{
+                      maxHeight: 280,
+
+                      overflowY: "auto"
+                    }}
+                  >
+
+                    {(edges || [])
+                      .filter((e) =>
+                        e.src_ip === selected.id ||
+                        e.dst_ip === selected.id
+                      )
+                      .slice(
+                        0,
+                        showAllConnections
+                          ? 1000
+                          : 8
+                      )
+                      .map((e, i) => (
+
+                        <div
+                          key={i}
+                          style={{
+                            padding:
+                              "10px 12px",
+
+                            borderRadius: 14,
+
+                            background:
+                              "rgba(248,250,252,0.85)",
+
+                            marginBottom: 10,
+
+                            border:
+                              "1px solid rgba(15,23,42,0.05)"
+                          }}
+                        >
 
                           <div
-                            key={i}
                             style={{
-                              padding: "6px 8px",
-                              borderRadius: 8,
-                              background: "#fbfcfe",
-                              marginBottom: 6
+                              fontSize: 13,
+
+                              fontWeight: 700,
+
+                              marginBottom: 6,
+
+                              wordBreak:
+                                "break-word"
                             }}
                           >
-
-                            <div style={{ fontSize: 13 }}>
-                              {e.src_ip} → {e.dst_ip}
-                            </div>
-
-                            <div
-                              style={{
-                                fontSize: 12,
-                                color: "var(--label)"
-                              }}
-                            >
-                              {formatBytes(e.bytes)}
-                            </div>
-
+                            {e.src_ip}
+                            {" → "}
+                            {e.dst_ip}
                           </div>
 
-                        ))}
-
-                      {(edges || []).filter(
-                        (e) =>
-                          e.src_ip === selected.id ||
-                          e.dst_ip === selected.id
-                      ).length > 8 && (
-
-                        <div style={{ marginTop: 8 }}>
-
-                          <button
-                            onClick={() =>
-                              setShowAllConnections((s) => !s)
-                            }
+                          <div
                             style={{
-                              padding: "6px 8px",
-                              cursor: 'pointer'
+                              fontSize: 12,
+
+                              color:
+                                "#64748b"
                             }}
                           >
-                            {showAllConnections
-                              ? 'Show less'
-                              : 'Show all connections'}
-                          </button>
+                            {formatBytes(e.bytes)}
+                          </div>
 
                         </div>
 
-                      )}
-
-                    </div>
+                      ))}
 
                   </div>
 
-                ) : (
+                </div>
 
-                  <div style={{ color: "var(--label)" }}>
-                    Select a node to see details.
-                  </div>
+              ) : (
 
-                )}
+                <div
+                  style={{
+                    color: "#64748b",
 
-              </div>
+                    lineHeight: 1.6
+                  }}
+                >
+                  Select a node from the graph
+                  to inspect traffic relationships
+                  and active connections.
+                </div>
+
+              )}
 
             </div>
 
-          </aside>
+          </div>
 
         </div>
 
@@ -556,4 +749,5 @@ export default function FlowExplorer() {
     </Layout>
 
   );
+
 }

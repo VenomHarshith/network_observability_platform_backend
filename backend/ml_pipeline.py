@@ -66,7 +66,7 @@ def run_pipeline(flows):
 
     model = IsolationForest(
         n_estimators=200,
-        contamination=0.03,
+        contamination=0.01,
         random_state=42
     )
 
@@ -92,12 +92,12 @@ def run_pipeline(flows):
     features["severity"] = "normal"
 
     features.loc[
-        features["anomaly_score"] > 0.20,
+        features["anomaly_score"] > 0.225,
         "severity"
     ] = "high"
 
     features.loc[
-        features["anomaly_score"] > 0.285,
+        features["anomaly_score"] > 0.30,
         "severity"
     ] = "critical"
 
