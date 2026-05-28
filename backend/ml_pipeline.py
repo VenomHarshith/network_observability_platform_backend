@@ -92,12 +92,12 @@ def run_pipeline(flows):
     features["severity"] = "normal"
 
     features.loc[
-        features["anomaly_score"] > 0.05,
+        features["anomaly_score"] > 0.20,
         "severity"
     ] = "high"
 
     features.loc[
-        features["anomaly_score"] > 0.10,
+        features["anomaly_score"] > 0.285,
         "severity"
     ] = "critical"
 
@@ -116,9 +116,9 @@ def run_pipeline(flows):
     alerts = []
 
     for ts, row in features.iterrows():
-    
+
         if row["severity"] != "normal":
-        
+
             alerts.append({
                 "timestamp": str(ts),
                 "severity": row["severity"],
@@ -127,6 +127,6 @@ def run_pipeline(flows):
                 "entropy": float(row["dst_ip_entropy"]),
                 "fan_out": float(row["avg_fan_out"])
             })
-    
+
     return alerts
     

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getMetrics, getAlerts } from "../api";
+import { getMetrics, getAlerts, getProtocols } from "../api";
 import { getStoredMetrics, pushMetricsBatch, subscribe } from "../stores/metricsStore";
 import Layout from "../layout/Layout";
 import {
@@ -14,6 +14,7 @@ export default function Overview() {
   const [metrics, setMetrics] = useState([]);
   const [alertsObj, setAlertsObj] = useState({});
   const [internetSpeed, setInternetSpeed] = useState("--");
+  const [protocols, setProtocols] = useState([]);
 
   /* ---------------- Fetch Loop ---------------- */
 
@@ -39,13 +40,15 @@ export default function Overview() {
     try {
       const m = await getMetrics();
       const a = await getAlerts();
+      const p = await getProtocols();
 
       if (m.data?.length) {
-        // push into shared store (deduped) and update local view via subscription
         pushMetricsBatch(m.data);
       }
 
       setAlertsObj(a.data || {});
+      setProtocols(p || []);
+
     } catch (e) {
       console.error(e);
     }
@@ -80,16 +83,6 @@ export default function Overview() {
     time: new Date(m.timestamp).toLocaleTimeString(),
     mb: formatMB(m.total_bytes)
   }));
-
-  // build protocol-bytes array for the shared ProtocolChart component
-  const totalBytes = latest.total_bytes || 0;
-  // If we don't have total bytes yet, fall back to a reasonable base so the pie renders
-  const baseTotal = totalBytes || (1024 * 1024); // assume 1 MB for visualization when empty
-  const protocolData = [
-    { protocol: "TCP", bytes: Math.round(baseTotal * ((latest.tcp_pct || 60) / 100)) },
-    { protocol: "UDP", bytes: Math.round(baseTotal * ((latest.udp_pct || 30) / 100)) },
-    { protocol: "ICMP", bytes: Math.round(baseTotal * ((latest.icmp_pct || 10) / 100)) }
-  ];
 
 
   /* ---------------- UI ---------------- */
@@ -126,7 +119,7 @@ export default function Overview() {
 
         <Card title="Protocol Distribution">
           <div style={{ height: 250 }}>
-            <ProtocolChart data={protocolData} />
+            <ProtocolChart data={protocols} />
           </div>
         </Card>
       </div>
