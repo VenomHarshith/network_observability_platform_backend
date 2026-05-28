@@ -29,11 +29,11 @@ export default function Alerts() {
 
       const d = await getAlertDetails();
 
-      const alertList = Array.isArray(a?.alerts)
-        ? a.alerts
+      const alertList = Array.isArray(a?.data?.alerts)
+        ? a.data.alerts
         : [];
 
-      setAlerts(alertList);
+      setAlerts([...alertList]);
 
       // highest anomaly score
       const maxScore =
@@ -41,7 +41,7 @@ export default function Alerts() {
           ? Math.max(...alertList.map(x => x.score || 0))
           : 0;
 
-      setScore(maxScore);
+      setScore(Number(maxScore || 0));
 
       setDetails(d || {});
 
@@ -79,7 +79,13 @@ export default function Alerts() {
 
         {/* LEFT */}
         <div>
+          <div style={{ color: "red", marginBottom: 10 }}>
+            Alert count: {alerts.length}
+          </div>
 
+          <div style={{ color: "red", marginBottom: 10 }}>
+            Score state: {score}
+          </div>
           {alerts.length === 0 ? (
 
             <div
@@ -96,7 +102,7 @@ export default function Alerts() {
 
           ) : (
 
-            alerts.map((a, i) => (
+            alerts.map((alert, i) => (
 
               <div
                 key={i}
@@ -106,14 +112,14 @@ export default function Alerts() {
                   borderRadius: 10,
 
                   background:
-                    a.severity === "critical"
+                    alert.severity === "critical"
                       ? "#ff000033"
                       : a.severity === "high"
                       ? "#ffaa0033"
                       : "#00ff9c22",
 
                   border:
-                    a.severity === "critical"
+                    alert.severity === "critical"
                       ? "1px solid #ff4d4f"
                       : a.severity === "high"
                       ? "1px solid #ffb020"
