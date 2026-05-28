@@ -4,95 +4,206 @@ import { getAlerts, getAlertDetails } from "../api";
 import AlertDetails from "../components/AlertDetails";
 
 export default function Alerts() {
+
   const [alerts, setAlerts] = useState([]);
   const [score, setScore] = useState(0);
   const [details, setDetails] = useState({});
 
   useEffect(() => {
+
     fetchAll();
+
     const id = setInterval(fetchAll, 5000);
+
     return () => clearInterval(id);
+
   }, []);
 
   async function fetchAll() {
+
     try {
+
       const a = await getAlerts();
+
+      console.log("ALERT API RESPONSE:", a);
+
       const d = await getAlertDetails();
 
-      // ✅ IMPORTANT FIX
-      const alertList = Array.isArray(a?.alerts) ? a.alerts : [];
+      const alertList = Array.isArray(a?.alerts)
+        ? a.alerts
+        : [];
 
       setAlerts(alertList);
-      setScore(a?.score ?? 0);
+
+      // highest anomaly score
+      const maxScore =
+        alertList.length > 0
+          ? Math.max(...alertList.map(x => x.score || 0))
+          : 0;
+
+      setScore(maxScore);
+
       setDetails(d || {});
+
     } catch (e) {
+
       console.error("Alert fetch error", e);
+
     }
   }
 
   return (
+
     <Layout>
+
       <h2>Alerts</h2>
 
-      {/* ML score display */}
-      <div style={{ marginBottom: 16, color: "#94a3b8" }}>
-        ML Anomaly Score: <b>{score}</b>
+      {/* ML score */}
+      <div
+        style={{
+          marginBottom: 16,
+          color: "#94a3b8",
+          fontSize: 18
+        }}
+      >
+        ML Anomaly Score: <b>{score.toFixed(3)}</b>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 420px", gap: 20 }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 420px",
+          gap: 20
+        }}
+      >
+
+        {/* LEFT */}
         <div>
+
           {alerts.length === 0 ? (
+
             <div
               style={{
-                padding: 12,
+                padding: 16,
                 background: "#082023",
                 borderRadius: 8,
-                color: "white"
+                color: "white",
+                fontWeight: 600
               }}
-            >No active alerts
+            >
+              No active alerts
             </div>
+
           ) : (
+
             alerts.map((a, i) => (
+
               <div
                 key={i}
                 style={{
-                  padding: 12,
-                  marginBottom: 8,
-                  borderRadius: 8,
+                  padding: 16,
+                  marginBottom: 12,
+                  borderRadius: 10,
+
                   background:
-                    a.severity === "high"
-                      ? "#ff4d6d33"
-                      : a.severity === "medium"
-                      ? "#facc1533"
+                    a.severity === "critical"
+                      ? "#ff000033"
+                      : a.severity === "high"
+                      ? "#ffaa0033"
                       : "#00ff9c22",
+
+                  border:
+                    a.severity === "critical"
+                      ? "1px solid #ff4d4f"
+                      : a.severity === "high"
+                      ? "1px solid #ffb020"
+                      : "1px solid #00ff9c44"
                 }}
               >
-                <div style={{ fontWeight: 800, textTransform: "uppercase" }}>
+
+                {/* severity */}
+                <div
+                  style={{
+                    fontWeight: 800,
+                    fontSize: 18,
+                    textTransform: "uppercase"
+                  }}
+                >
                   {a.severity}
                 </div>
-                <div style={{ fontWeight: 700 }}>{a.reason}</div>
-                <div style={{ marginTop: 6 }}>{a.explanation}</div>
-                {/* timestamp and data snapshot if available */}
+
+                {/* score */}
+                <div style={{ marginTop: 10 }}>
+                  ML anomaly score:
+                  <b style={{ marginLeft: 6 }}>
+                    {a.score?.toFixed(3)}
+                  </b>
+                </div>
+
+                {/* traffic */}
+                <div style={{ marginTop: 8 }}>
+                  Traffic:
+                  <b style={{ marginLeft: 6 }}>
+                    {(
+                      (a.total_bytes || 0) /
+                      (1024 * 1024)
+                    ).toFixed(2)} MB
+                  </b>
+                </div>
+
+                {/* entropy */}
+                <div style={{ marginTop: 8 }}>
+                  Entropy:
+                  <b style={{ marginLeft: 6 }}>
+                    {a.entropy?.toFixed(2)}
+                  </b>
+                </div>
+
+                {/* fanout */}
+                <div style={{ marginTop: 8 }}>
+                  Fan-Out:
+                  <b style={{ marginLeft: 6 }}>
+                    {a.fan_out?.toFixed(2)}
+                  </b>
+                </div>
+
+                {/* timestamp */}
                 {a.timestamp && (
-                  <div style={{ marginTop: 8, color: "var(--label)", fontSize: 12 }}>
-                    Time: {new Date(a.timestamp).toLocaleString()}
+
+                  <div
+                    style={{
+                      marginTop: 12,
+                      fontSize: 12,
+                      color: "#cbd5e1"
+                    }}
+                  >
+                    Time:
+                    {" "}
+                    {new Date(a.timestamp).toLocaleString()}
                   </div>
+
                 )}
-                {typeof a.total_bytes !== 'undefined' && (
-                  <div style={{ marginTop: 6, color: "var(--label)", fontSize: 12 }}>
-                    Data: {(a.total_bytes / (1024 * 1024)).toFixed(2)} MB — Throughput: {a.throughput_mbps ?? "-"} MB/s
-                  </div>
-                )}
+
               </div>
+
             ))
+
           )}
+
         </div>
 
+        {/* RIGHT */}
         <div>
+
           <h4>Alert Details</h4>
+
           <AlertDetails details={details} />
+
         </div>
+
       </div>
+
     </Layout>
+
   );
 }
