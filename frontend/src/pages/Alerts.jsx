@@ -24,9 +24,6 @@ export default function Alerts() {
     try {
 
       const a = await getAlerts();
-
-      console.log("ALERT API RESPONSE:", a);
-
       const d = await getAlertDetails();
 
       const alertList = Array.isArray(a?.data?.alerts)
@@ -35,7 +32,6 @@ export default function Alerts() {
 
       setAlerts([...alertList]);
 
-      // highest anomaly score
       const maxScore =
         alertList.length > 0
           ? Math.max(...alertList.map(x => x.score || 0))
@@ -58,43 +54,52 @@ export default function Alerts() {
 
       <h2>Alerts</h2>
 
-      {/* ML score */}
+      {/* ML SCORE */}
       <div
         style={{
-          marginBottom: 16,
+          marginBottom: 20,
           color: "#94a3b8",
-          fontSize: 18
+          fontSize: 18,
+          fontWeight: 500
         }}
       >
-        ML Anomaly Score: <b>{score.toFixed(3)}</b>
+        ML Anomaly Score:
+        <b
+          style={{
+            marginLeft: 8,
+            color:
+              score > 0.285
+                ? "#ff6b6b"
+                : score > 0.20
+                ? "#ffb84d"
+                : "#22c55e"
+          }}
+        >
+          {score.toFixed(3)}
+        </b>
       </div>
 
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 420px",
-          gap: 20
+          gridTemplateColumns: "1fr 380px",
+          gap: 20,
+          alignItems: "start"
         }}
       >
 
-        {/* LEFT */}
+        {/* LEFT SIDE */}
         <div>
-          <div style={{ color: "red", marginBottom: 10 }}>
-            Alert count: {alerts.length}
-          </div>
 
-          <div style={{ color: "red", marginBottom: 10 }}>
-            Score state: {score}
-          </div>
           {alerts.length === 0 ? (
 
             <div
               style={{
                 padding: 16,
                 background: "#082023",
-                borderRadius: 8,
+                borderRadius: 12,
                 color: "white",
-                fontWeight: 600
+                fontWeight: 500
               }}
             >
               No active alerts
@@ -107,49 +112,67 @@ export default function Alerts() {
               <div
                 key={i}
                 style={{
-                  padding: 16,
+                  padding: "14px 16px",
                   marginBottom: 12,
-                  borderRadius: 10,
+                  borderRadius: 14,
 
                   background:
                     alert.severity === "critical"
-                      ? "#ff000033"
-                      : alert.severity === "high"
-                      ? "#ffaa0033"
-                      : "#00ff9c22",
-                                  
+                      ? "rgba(255, 77, 79, 0.10)"
+                      : "rgba(255, 176, 32, 0.10)",
+
                   border:
                     alert.severity === "critical"
-                      ? "1px solid #ff4d4f"
-                      : alert.severity === "high"
-                      ? "1px solid #ffb020"
-                      : "1px solid #00ff9c44"
+                      ? "1px solid rgba(255,77,79,0.35)"
+                      : "1px solid rgba(255,176,32,0.35)",
+
+                  backdropFilter: "blur(6px)"
                 }}
               >
 
-                {/* severity */}
+                {/* SEVERITY */}
                 <div
                   style={{
-                    fontWeight: 800,
-                    fontSize: 18,
-                    textTransform: "uppercase"
+                    fontWeight: 700,
+                    fontSize: 13,
+                    letterSpacing: 1,
+                    textTransform: "uppercase",
+
+                    color:
+                      alert.severity === "critical"
+                        ? "#ff6b6b"
+                        : "#ffb84d",
+
+                    marginBottom: 10
                   }}
                 >
                   {alert.severity}
                 </div>
 
-                {/* score */}
-                <div style={{ marginTop: 10 }}>
-                  ML anomaly score:
-                  <b style={{ marginLeft: 6 }}>
-                    {alert.score?.toFixed(3)}
-                  </b>
+                {/* SCORE */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginTop: 4,
+                    fontSize: 14
+                  }}
+                >
+                  <span>ML Score</span>
+                  <b>{alert.score?.toFixed(3)}</b>
                 </div>
 
-                {/* traffic */}
-                <div style={{ marginTop: 8 }}>
-                  Traffic:
-                  <b style={{ marginLeft: 6 }}>
+                {/* TRAFFIC */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginTop: 4,
+                    fontSize: 14
+                  }}
+                >
+                  <span>Traffic</span>
+                  <b>
                     {(
                       (alert.total_bytes || 0) /
                       (1024 * 1024)
@@ -157,35 +180,43 @@ export default function Alerts() {
                   </b>
                 </div>
 
-                {/* entropy */}
-                <div style={{ marginTop: 8 }}>
-                  Entropy:
-                  <b style={{ marginLeft: 6 }}>
-                    {alert.entropy?.toFixed(2)}
-                  </b>
+                {/* ENTROPY */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginTop: 4,
+                    fontSize: 14
+                  }}
+                >
+                  <span>Entropy</span>
+                  <b>{alert.entropy?.toFixed(2)}</b>
                 </div>
 
-                {/* fanout */}
-                <div style={{ marginTop: 8 }}>
-                  Fan-Out:
-                  <b style={{ marginLeft: 6 }}>
-                    {alert.fan_out?.toFixed(2)}
-                  </b>
+                {/* FANOUT */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginTop: 4,
+                    fontSize: 14
+                  }}
+                >
+                  <span>Fan-Out</span>
+                  <b>{alert.fan_out?.toFixed(2)}</b>
                 </div>
 
-                {/* timestamp */}
+                {/* TIME */}
                 {alert.timestamp && (
 
                   <div
                     style={{
-                      marginTop: 12,
-                      fontSize: 12,
-                      color: "#cbd5e1"
+                      marginTop: 10,
+                      fontSize: 11,
+                      opacity: 0.65
                     }}
                   >
-                    Time:
-                    {" "}
-                    {new Date(alert.timestamp).toLocaleString()}
+                    {new Date(alert.timestamp).toLocaleTimeString()}
                   </div>
 
                 )}
@@ -198,10 +229,12 @@ export default function Alerts() {
 
         </div>
 
-        {/* RIGHT */}
+        {/* RIGHT SIDE */}
         <div>
 
-          <h4>Alert Details</h4>
+          <h4 style={{ marginBottom: 12 }}>
+            Alert Details
+          </h4>
 
           <AlertDetails details={details} />
 
