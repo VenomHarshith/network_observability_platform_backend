@@ -8,6 +8,7 @@ import pandas as pd
 import os
 import time
 from typing import List, Dict
+from ml_pipeline import run_pipeline
 
 detector = AnomalyDetector()
 training_buffer = []
@@ -232,8 +233,11 @@ async def receive_flows(request: Request):
     else:
         LIVE_FLOWS.append(data)
 
-    # keep latest 5000 flows only
     LIVE_FLOWS = LIVE_FLOWS[-5000:]
+
+    # RUN ML
+    print("RUN_PIPELINE CALLED")
+    run_pipeline(LIVE_FLOWS)
 
     return {
         "status": "success",
