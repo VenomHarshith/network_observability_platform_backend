@@ -82,7 +82,8 @@ def run_pipeline(flows):
     features["anomaly_score"] = 0.0
 
     scores = np.abs(model.decision_function(test_X))
-    
+    print("RAW SCORES:", scores)
+
     features.loc[test_X.index, "anomaly_score"] = scores
     
     # -------------------------
@@ -112,4 +113,20 @@ def run_pipeline(flows):
         "anomaly_score",
         "severity"
     ]].tail(10))
+    alerts = []
+
+    for ts, row in features.iterrows():
+    
+        if row["severity"] != "normal":
+        
+            alerts.append({
+                "timestamp": str(ts),
+                "severity": row["severity"],
+                "score": float(row["anomaly_score"]),
+                "total_bytes": int(row["total_bytes"]),
+                "entropy": float(row["dst_ip_entropy"]),
+                "fan_out": float(row["avg_fan_out"])
+            })
+    
+    return alerts
     
