@@ -79,10 +79,11 @@ def run_pipeline(flows):
     
     model.fit(train_X)
     
-    scores = -model.decision_function(test_X)
+    features["anomaly_score"] = 0.0
+
+    scores = np.abs(model.decision_function(test_X))
     
     features.loc[test_X.index, "anomaly_score"] = scores
-    features["anomaly_score"] = features["anomaly_score"].fillna(0)
     
     # -------------------------
     # Severity classification
@@ -90,12 +91,12 @@ def run_pipeline(flows):
     features["severity"] = "normal"
 
     features.loc[
-        features["anomaly_score"] > 0.03,
+        features["anomaly_score"] > 0.05,
         "severity"
     ] = "high"
-    
+
     features.loc[
-        features["anomaly_score"] > 0.06,
+        features["anomaly_score"] > 0.10,
         "severity"
     ] = "critical"
 
