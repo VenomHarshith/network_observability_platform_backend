@@ -12,14 +12,14 @@ def entropy(series):
 # -------------------------
 # MAIN PIPELINE FUNCTION
 # -------------------------
-def run_pipeline(db, csv_path="flows.csv"):
+def run_pipeline(flows):
     # Import models here to avoid circular imports
     from models import FlowWindow, Alert
 
     # -------------------------
     # Load & preprocess data
     # -------------------------
-    df = pd.read_csv(csv_path)
+    df = pd.DataFrame(flows)
 
     df["timestamp"] = pd.to_datetime(df["timestamp"], unit="s")
     df["time_window"] = df["timestamp"].dt.floor("5s")  # fixed warning
