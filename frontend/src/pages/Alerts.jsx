@@ -149,61 +149,68 @@ export default function Alerts() {
                   {alert.severity}
                 </div>
 
-                {/* SCORE */}
                 <div
                   style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginTop: 4,
-                    fontSize: 14
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                    gap: 10,
+                    marginTop: 6
                   }}
                 >
-                  <span>ML Score</span>
-                  <b>{alert.score?.toFixed(3)}</b>
-                </div>
-
-                {/* TRAFFIC */}
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginTop: 4,
-                    fontSize: 14
-                  }}
-                >
-                  <span>Traffic</span>
-                  <b>
-                    {(
-                      (alert.total_bytes || 0) /
-                      (1024 * 1024)
-                    ).toFixed(2)} MB
-                  </b>
-                </div>
-
-                {/* ENTROPY */}
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginTop: 4,
-                    fontSize: 14
-                  }}
-                >
-                  <span>Entropy</span>
-                  <b>{alert.entropy?.toFixed(2)}</b>
-                </div>
-
-                {/* FANOUT */}
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginTop: 4,
-                    fontSize: 14
-                  }}
-                >
-                  <span>Fan-Out</span>
-                  <b>{alert.fan_out?.toFixed(2)}</b>
+                
+                  {/* ML SCORE */}
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      fontSize: 14
+                    }}
+                  >
+                    <span>ML Score</span>
+                    <b>{alert.score?.toFixed(3)}</b>
+                  </div>
+                  
+                  {/* TRAFFIC */}
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      fontSize: 14
+                    }}
+                  >
+                    <span>Traffic</span>
+                    <b>
+                      {(
+                        (alert.total_bytes || 0) /
+                        (1024 * 1024)
+                      ).toFixed(2)} MB
+                    </b>
+                  </div>
+                    
+                  {/* ENTROPY */}
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      fontSize: 14
+                    }}
+                  >
+                    <span>Entropy</span>
+                    <b>{alert.entropy?.toFixed(2)}</b>
+                  </div>
+                  
+                  {/* FANOUT */}
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      fontSize: 14
+                    }}
+                  >
+                    <span>Fan-Out</span>
+                    <b>{alert.fan_out?.toFixed(2)}</b>
+                  </div>
+                  
                 </div>
 
                 {/* TIME */}
@@ -216,7 +223,9 @@ export default function Alerts() {
                       opacity: 0.65
                     }}
                   >
-                    {new Date(alert.timestamp).toLocaleTimeString()}
+                    {new Date(alert.timestamp).toLocaleString("en-IN", {
+                      hour12: true
+                    })}
                   </div>
 
                 )}
